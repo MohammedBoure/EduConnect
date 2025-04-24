@@ -1,20 +1,66 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الصفحة الرئيسية</title>
-    <link rel="stylesheet" href="assets/css/home.css">
+    <title>EduConnect - لوحة التحكم</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <nav>
+        <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="admin_users.html">إدارة المستخدمين</a></li>
+            <li><a href="admin_posts.html">إدارة المنشورات</a></li>
+            <li><a href="#" id="logoutBtn">تسجيل الخروج</a></li>
+             <!-- أضف روابط لإدارة التعليقات والرسائل إذا تم توفيرها -->
+        </ul>
+    </nav>
+
     <div class="container">
-        <h1>مرحبًا بك في EduConnect</h1>
-        <div class="button-container">
-            <!-- الرابط الأول يؤدي إلى صفحة التسجيل -->
-            <a href="register/" class="button">التسجيل</a>
-            <!-- الرابط الثاني يؤدي إلى صفحة تسجيل الدخول -->
-            <a href="login/" class="button">تسجيل الدخول</a>
-        </div>
+        <h1>مرحباً بك في لوحة تحكم EduConnect</h1>
+        <p>يمكنك التنقل بين أقسام الإدارة باستخدام القائمة أعلاه.</p>
+        <div id="userInfo">جاري تحميل معلومات المستخدم...</div>
     </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // حماية الصفحة
+        redirectToLoginIfNotAuthenticated();
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfoDiv = document.getElementById('userInfo');
+
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                logout();
+            }
+        });
+
+        // جلب معلومات المستخدم الحالي لعرضها (اختياري)
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userId = getUserId();
+            if (userId) {
+                // استخدم API الحصول على تفاصيل المستخدم
+                const result = await apiGetUserDetails(userId);
+                if (result.ok) {
+                    const user = result.data;
+                    userInfoDiv.innerHTML = `
+                        <p>المستخدم الحالي: <strong>${user.first_name} ${user.last_name}</strong> (${user.email})</p>
+                        <p>الدور: ${user.role}</p>
+                    `;
+                } else {
+                    userInfoDiv.innerHTML = '<p class="error">لم يتمكن من تحميل معلومات المستخدم.</p>';
+                }
+            } else {
+                 userInfoDiv.innerHTML = '<p class="error">لم يتم العثور على معرف المستخدم.</p>';
+                 // ربما إعادة توجيه لتسجيل الدخول مرة أخرى
+                 // logout();
+            }
+        });
+
+    </script>
 </body>
 </html>

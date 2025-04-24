@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="admin_users.html">إدارة المستخدمين</a></li>
+            <li><a href="admin_posts.html">إدارة المنشورات</a></li>
+            <li><a href="#" id="logoutBtn">تسجيل الخروج</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>إدارة المستخدمين</h1>
+        <div id="message" class="message" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">جاري تحميل المستخدمين...</div>
+
+        <table id="usersTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>الصورة</th>
+                    <th>الاسم</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>القسم</th>
+                    <th>المهارات</th>
+                    <th>الدور</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="usersTbody">
+                <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
+            </tbody>
+        </table>
+         <p id="noUsers" style="display: none;">لا يوجد مستخدمون لعرضهم.</p>
+
+        <div id="pagination">
+             <!-- أزرار الترقيم هنا -->
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // حماية الصفحة
+        redirectToLoginIfNotAuthenticated();
+
+        const usersTbody = document.getElementById('usersTbody');
+        const usersTable = document.getElementById('usersTable');
+        const loadingDiv = document.getElementById('loading');
+        const noUsersP = document.getElementById('noUsers');
+        const paginationDiv = document.getElementById('pagination');
+        const logoutBtn = document.getElementById('logoutBtn'); // زر الخروج في القائمة
+
+        let currentPage = 1;
+        const perPage = 10; // عدد المستخدمين لكل صفحة (أو احصل عليه من الـ API)
+
+        async function loadUsers(page = 1) {
+            loadingDiv.style.display = 'block';
+            usersTable.style.display = 'none';
+            noUsersP.style.display = 'none';
+            usersTbody.innerHTML = ''; // مسح الصفوف القديمة
+            paginationDiv.innerHTML = ''; // مسح الترقيم القديم
+            hideMessage('message');
+
+            const result = await apiGetUsers(page, perPage);
+
+            loadingDiv.style.display = 'none';
+
+            if (result.ok && result.data.users) {
+                const users = result.data.users;
+                if (users.length > 0) {
+                    usersTable.style.display = 'table';
+                    users.forEach(user => {
+                        const row = usersTbody.insertRow();
+                        const skillsText = Array.isArray(user.skills) ? user.skills.join(', ') : (user.skills || '');
+                        const photoHtml = user.photo ? `<img src="${user.photo}" alt="صورة ${user.first_name}">` : '-';
+
+                        row.innerHTML = `
+                            <td>${photoHtml}</td>
+                            <td>${user.first_name || ''} ${user.last_name || ''}</td>
+                            <td>${user.email || ''}</td>
+                            <td>${user.department || ''}</td>
+                            <td>${skillsText}</td>
+                            <td>${user.role || ''}</td>
+                            <td class="actions">
+                                <button onclick="editUser(${user.id})">تعديل</button>
+                                <button class="danger" onclick="deleteUser(${user.id}, '${user.first_name} ${user.last_name}')">حذف</button>
+                            </td>
+                        `;
+                    });
+                    // تحديث وترسيم الترقيم
+                    currentPage = result.data.page;
+                    renderPagination(result.data.page, result.data.pages);
+                } else {
+                    noUsersP.style.display = 'block';
+                }
+            } else {
+                showMessage('message', `فشل تحميل المستخدمين: ${result.error}`, 'error');
+            }
+        }
+
+         function renderPagination(currentPage, totalPages) {
+            paginationDiv.innerHTML = ''; // مسح الأزرار القديمة
+
+            // زر السابق
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'السابق';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => loadUsers(currentPage - 1);
+            paginationDiv.appendChild(prevButton);
+
+            // عرض رقم الصفحة الحالية وعدد الصفحات الإجمالي
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = ` صفحة ${currentPage} من ${totalPages} `;
+            pageInfo.style.margin = '0 10px';
+            paginationDiv.appendChild(pageInfo);
+
+            // زر التالي
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'التالي';
+            nextButton.disabled = currentPage >= totalPages; // >= لتجنب طلب صفحة غير موجودة
+            nextButton.onclick = () => loadUsers(currentPage + 1);
+            paginationDiv.appendChild(nextButton);
+        }
+
+        function editUser(userId) {
+             // الانتقال إلى صفحة التعديل مع تمرير ID المستخدم
+            window.location.href = `admin_user_edit.html?id=${userId}`;
+        }
+
+        async function deleteUser(userId, userName) {
+            if (confirm(`هل أنت متأكد من حذف المستخدم "${userName}" (ID: ${userId})؟`)) {
+                 const result = await apiDeleteUser(userId);
+                 if (result.ok) {
+                    showMessage('message', `تم حذف المستخدم ${userName} بنجاح.`, 'success');
+                    // إعادة تحميل الصفحة الحالية من المستخدمين
+                    loadUsers(currentPage);
+                 } else {
+                    showMessage('message', `فشل حذف المستخدم: ${result.error}`, 'error');
+                 }
+            }
+        }
+
+        // إضافة مستمع لزر الخروج
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                logout();
+            }
+        });
+
+        // تحميل المستخدمين عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => loadUsers(currentPage));
+    </script>
+</body>
+</html>

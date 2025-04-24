@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المنشورات</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+         <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="admin_users.html">إدارة المستخدمين</a></li>
+            <li><a href="admin_posts.html">إدارة المنشورات</a></li>
+            <li><a href="#" id="logoutBtn">تسجيل الخروج</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>إدارة المنشورات</h1>
+         <a href="admin_post_create.html"><button>إنشاء منشور جديد</button></a>
+        <div id="message" class="message" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">جاري تحميل المنشورات...</div>
+
+        <table id="postsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>العنوان</th>
+                    <th>المؤلف</th>
+                    <th>تاريخ الإنشاء</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="postsTbody">
+                <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
+            </tbody>
+        </table>
+        <p id="noPosts" style="display: none;">لا توجد منشورات لعرضها.</p>
+
+        <div id="pagination">
+             <!-- أزرار الترقيم هنا -->
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // حماية الصفحة
+        redirectToLoginIfNotAuthenticated();
+
+        const postsTbody = document.getElementById('postsTbody');
+        const postsTable = document.getElementById('postsTable');
+        const loadingDiv = document.getElementById('loading');
+        const noPostsP = document.getElementById('noPosts');
+        const paginationDiv = document.getElementById('pagination');
+        const logoutBtn = document.getElementById('logoutBtn'); // زر الخروج
+
+        let currentPage = 1;
+        const perPage = 10;
+
+        async function loadPosts(page = 1) {
+            loadingDiv.style.display = 'block';
+            postsTable.style.display = 'none';
+            noPostsP.style.display = 'none';
+            postsTbody.innerHTML = '';
+            paginationDiv.innerHTML = '';
+            hideMessage('message');
+
+            const result = await apiGetPosts(page, perPage);
+
+            loadingDiv.style.display = 'none';
+
+            if (result.ok && result.data.posts) {
+                const posts = result.data.posts;
+                 if (posts.length > 0) {
+                    postsTable.style.display = 'table';
+                    posts.forEach(post => {
+                        const row = postsTbody.insertRow();
+                        const authorName = post.author ? `${post.author.first_name || ''} ${post.author.last_name || ''}` : 'غير معروف';
+                        const creationDate = post.created_at ? new Date(post.created_at).toLocaleString('ar-EG') : '-';
+
+                        row.innerHTML = `
+                            <td>${post.id}</td>
+                            <td>${post.title || ''}</td>
+                            <td>${authorName}</td>
+                            <td>${creationDate}</td>
+                            <td class="actions">
+                                <button onclick="editPost(${post.id})">تعديل</button>
+                                <button class="danger" onclick="deletePost(${post.id}, '${post.title}')">حذف</button>
+                            </td>
+                        `;
+                     });
+                    currentPage = result.data.page;
+                    renderPagination(result.data.page, result.data.pages);
+                 } else {
+                    noPostsP.style.display = 'block';
+                 }
+            } else {
+                showMessage('message', `فشل تحميل المنشورات: ${result.error}`, 'error');
+            }
+        }
+
+         function renderPagination(currentPage, totalPages) {
+            paginationDiv.innerHTML = ''; // مسح الأزرار القديمة
+
+            // زر السابق
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'السابق';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => loadPosts(currentPage - 1);
+            paginationDiv.appendChild(prevButton);
+
+            // عرض رقم الصفحة الحالية وعدد الصفحات الإجمالي
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = ` صفحة ${currentPage} من ${totalPages} `;
+            pageInfo.style.margin = '0 10px';
+            paginationDiv.appendChild(pageInfo);
+
+            // زر التالي
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'التالي';
+            nextButton.disabled = currentPage >= totalPages;
+            nextButton.onclick = () => loadPosts(currentPage + 1);
+            paginationDiv.appendChild(nextButton);
+        }
+
+
+         function editPost(postId) {
+            window.location.href = `admin_post_edit.html?id=${postId}`;
+         }
+
+         async function deletePost(postId, postTitle) {
+             if (confirm(`هل أنت متأكد من حذف المنشور "${postTitle}" (ID: ${postId})؟`)) {
+                 const result = await apiDeletePost(postId);
+                 if (result.ok) {
+                    showMessage('message', `تم حذف المنشور بنجاح.`, 'success');
+                    loadPosts(currentPage); // إعادة تحميل القائمة
+                 } else {
+                     showMessage('message', `فشل حذف المنشور: ${result.error}`, 'error');
+                 }
+             }
+         }
+
+         // إضافة مستمع لزر الخروج
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                logout();
+            }
+        });
+
+        // تحميل المنشورات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => loadPosts(currentPage));
+    </script>
+</body>
+</html>
