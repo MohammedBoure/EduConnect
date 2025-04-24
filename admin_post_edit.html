@@ -51,7 +51,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id');
 
-         async function loadPostDetails() {
+        async function loadPostDetails() {
             if (!postId) {
                  showMessage('message', 'لم يتم تحديد معرف المنشور.', 'error');
                  loadingDiv.style.display = 'none';

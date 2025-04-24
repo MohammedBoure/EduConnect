@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://educonnect-wp9t.onrender.com'; // أو http://127.0.0.1:5000
+const API_BASE_URL = 'hhttps://educonnect-wp9t.onrender.com/api'; // http://127.0.0.1:5000     https://educonnect-wp9t.onrender.com
 
 function setToken(token) {
     localStorage.setItem('access_token', token);
@@ -50,8 +50,8 @@ function showMessage(elementId, message, type = 'error') {
 }
 
 function hideMessage(elementId) {
-     const messageDiv = document.getElementById(elementId);
-     if (messageDiv) {
+    const messageDiv = document.getElementById(elementId);
+    if (messageDiv) {
         messageDiv.style.display = 'none';
-     }
+    }
 }

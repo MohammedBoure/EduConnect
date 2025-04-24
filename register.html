@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل مستخدم جديد</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div class="container">
         <h1>تسجيل مستخدم جديد</h1>
@@ -36,6 +38,9 @@
             <button type="submit" id="submitBtn">تسجيل</button>
         </form>
         <p>لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
+
+        <!-- إضافة عنصر النتيجة -->
+        <p id="result"></p>
     </div>
 
     <script src="js/auth.js"></script>
@@ -43,30 +48,52 @@
     <script>
         const form = document.getElementById('registerForm');
         const submitBtn = document.getElementById('submitBtn');
+        const messageElement = document.getElementById('message');
+        const resultElement = document.getElementById('result');
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            hideMessage('message');
+            messageElement.style.display = 'none';
+            resultElement.textContent = '';
             submitBtn.disabled = true;
             submitBtn.textContent = 'جاري التسجيل...';
 
             const formData = new FormData(form);
             const userData = {};
             formData.forEach((value, key) => {
-                 userData[key] = value;
+                userData[key] = value;
             });
-             // إزالة حقل الصورة إذا كان فارغًا (لأنه اختياري)
+
             if (!userData.photo) {
                 delete userData.photo;
             }
 
-            const result = await apiRegister(userData);
+            try {
+                const result = await apiRegister(userData);
+                console.log('Server response:', result);
 
-            if (result.ok) {
-                showMessage('message', `تم التسجيل بنجاح! معرف المستخدم: ${result.data.user.id}. يمكنك الآن تسجيل الدخول.`, 'success');
-                form.reset();
-            } else {
-                showMessage('message', `فشل التسجيل: ${result.error}`, 'error');
+                if (result.ok) {
+                    const user = result.data;
+
+                    messageElement.style.display = 'block';
+                    messageElement.textContent = '✅ تم التسجيل بنجاح! سيتم تحويلك إلى صفحة تسجيل الدخول خلال ثوان...';
+                    messageElement.style.color = 'green';
+
+                    resultElement.textContent = `الاسم: ${user.first_name} ${user.last_name}\nالبريد الإلكتروني: ${user.email}`;
+
+                    // إعادة التوجيه بعد 3 ثوانٍ
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                } else {
+                    messageElement.style.display = 'block';
+                    messageElement.textContent = `❌ خطأ: ${result.error}`;
+                    messageElement.style.color = 'red';
+                }
+            } catch (error) {
+                messageElement.style.display = 'block';
+                messageElement.textContent = `❌ خطأ في الاتصال: ${error.message}`;
+                messageElement.style.color = 'red';
             }
 
             submitBtn.disabled = false;
@@ -74,4 +101,5 @@
         });
     </script>
 </body>
+
 </html>

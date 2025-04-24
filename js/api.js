@@ -1,16 +1,14 @@
 // تأكد من وجود API_BASE_URL (يمكن استيراده أو تعريفه هنا إذا لزم الأمر)
-// const API_BASE_URL = 'https://educonnect-wp9t.onrender.com';
+//const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
-// دالة Fetch أساسية مع معالجة التوكن والأخطاء
-async function fetchApi(endpoint, options = {}) {
+async function fetchApi(endpoint, options = {}, authRequired = true) {
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
-        ...options.headers, // السماح بتمرير رؤوس إضافية
+        ...options.headers,
     };
 
-    // إضافة توكن المصادقة إذا كان موجودًا وإذا كان الطلب ليس لتسجيل الدخول/التسجيل
-    if (token && !endpoint.startsWith('/api/login') && !endpoint.startsWith('/api/register')) {
+    if (authRequired && token && !endpoint.startsWith('/login') && !endpoint.startsWith('/register')) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -20,48 +18,38 @@ async function fetchApi(endpoint, options = {}) {
             headers: headers,
         });
 
-        // إذا كان الرد 204 No Content (مثل الحذف الناجح)، لا تحاول قراءة JSON
         if (response.status === 204) {
-            return { ok: true, data: { message: "Operation successful (No Content)"} }; // أو return { ok: true }
+            return { ok: true, data: { message: "Operation successful (No Content)" } };
         }
 
         const data = await response.json();
 
         if (!response.ok) {
-            // التعامل مع الأخطاء الشائعة (مثل انتهاء صلاحية التوكن)
-            if (response.status === 401 || response.status === 403) {
-                 console.warn(`Authentication error (${response.status}) accessing ${endpoint}. Redirecting to login.`);
-                 alert('جلسة العمل غير صالحة أو انتهت صلاحيتها. يرجى تسجيل الدخول مرة أخرى.');
-                 logout(); // استخدم دالة الخروج من auth.js
-                 // رمي خطأ لمنع استمرار الكود بعد إعادة التوجيه
-                 throw new Error(`Authentication failed: ${response.status}`);
-            }
-            // رمي خطأ مع رسالة من الـ API إن وجدت
             throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
         }
 
-        return { ok: true, data }; // إرجاع البيانات في حالة النجاح
+        return { ok: true, data };
 
     } catch (error) {
         console.error(`API call failed: ${error.message}`, error);
-        // إرجاع كائن خطأ موحد يمكن للواجهة التعامل معه
         return { ok: false, error: error.message || 'Network error or server is unreachable' };
     }
 }
 
+
 // --- واجهات المصادقة ---
 async function apiRegister(userData) {
-    return fetchApi('/api/register', {
+    return fetchApi('/register', {
         method: 'POST',
         body: JSON.stringify(userData),
-    });
+    }, false); // لا يحتاج توكن
 }
 
 async function apiLogin(credentials) {
-    return fetchApi('/api/login', {
+    return fetchApi('/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
-    });
+    }, false); // لا يحتاج توكن
 }
 
 // --- واجهات إدارة المستخدمين ---
@@ -70,13 +58,11 @@ async function apiGetUsers(page = 1, perPage = 10) {
 }
 
 async function apiGetUserDetails(userId) {
-    return fetchApi(`/admin/users/${userId}`, { method: 'GET' });
+    return fetchApi(`/admin/users/${userId}`, { method: 'GET' }, false); // بدون توكن
 }
 
 async function apiUpdateUser(userId, userData) {
-    // تأكد من إرسال البيانات المطلوبة فقط حسب الـ API
     const validData = { ...userData };
-    // لا ترسل ID أو أي حقول غير قابلة للتعديل في الجسم
     delete validData.id;
     return fetchApi(`/admin/users/${userId}`, {
         method: 'PUT',
@@ -85,20 +71,20 @@ async function apiUpdateUser(userId, userData) {
 }
 
 async function apiDeleteUser(userId) {
-    // طريقة DELETE عادة لا تحتوي على جسم للطلب
     return fetchApi(`/admin/users/${userId}`, { method: 'DELETE' });
 }
 
+
 // --- واجهات إدارة المنشورات ---
 async function apiCreatePost(postData) {
-    // تأكد من إضافة user_id هنا إذا لم يكن مضافًا في الواجهة
     if (!postData.user_id) {
-        postData.user_id = parseInt(getUserId()); // تأكد من أنه رقم
+        postData.user_id = parseInt(getUserId());
     }
-     // إزالة حقل الصورة إذا كان فارغًا واختياريًا
-     if (postData.image === '') {
+
+    if (postData.image === '') {
         delete postData.image;
     }
+
     return fetchApi('/admin/posts/create', {
         method: 'POST',
         body: JSON.stringify(postData),
@@ -109,25 +95,21 @@ async function apiGetPosts(page = 1, perPage = 10) {
     return fetchApi(`/admin/posts?page=${page}&per_page=${perPage}`, { method: 'GET' });
 }
 
-// ملاحظة: وثيقتك لا تذكر صراحة API للحصول على تفاصيل منشور واحد
-// لكنها ضرورية لصفحة التعديل. نفترض وجودها (GET /admin/posts/{post_id})
 async function apiGetPostDetails(postId) {
-    // افترض وجود هذا المسار بناءً على نمط REST
-    return fetchApi(`/admin/posts/${postId}`, { method: 'GET' });
+    return fetchApi(`/posts/public/${postId}`, { method: 'GET' },false);
 }
 
 async function apiUpdatePost(postId, postData) {
-     // تأكد من إرسال البيانات المطلوبة فقط
-     const validData = { ...postData };
-     delete validData.id;
-     delete validData.user_id; // عادة لا يُسمح بتغيير المؤلف
-     delete validData.author;
-     delete validData.created_at;
-     // إزالة حقل الصورة إذا كان فارغًا ولكن الـ API تتطلب عدم إرساله فارغًا
-     if (validData.image === '') {
-        // قد تحتاج لإرسال null أو حذفه حسب تصميم الـ API
+    const validData = { ...postData };
+    delete validData.id;
+    delete validData.user_id;
+    delete validData.author;
+    delete validData.created_at;
+
+    if (validData.image === '') {
         delete validData.image;
-     }
+    }
+
     return fetchApi(`/admin/posts/${postId}`, {
         method: 'PUT',
         body: JSON.stringify(validData),
@@ -136,4 +118,55 @@ async function apiUpdatePost(postId, postData) {
 
 async function apiDeletePost(postId) {
     return fetchApi(`/admin/posts/${postId}`, { method: 'DELETE' });
+}
+
+async function apiGetPostDetails(postId) {
+
+    try {
+        const response = await fetch(`/api/posts/public/${postId}`, { method: 'GET' }, false);
+        const text = await response.text();
+
+        try {
+            const json = JSON.parse(text);
+            return { ok: response.ok, data: json };
+        } catch (err) {
+            return { ok: false, error: 'الرد ليس JSON صالحًا', raw: text };
+        }
+    } catch (error) {
+        return { ok: false, error: error.message };
+    }
+}
+async function apiGetPostComments(postId) {
+    return fetchApi(`/posts/${postId}/comments`, { method: 'GET' });
+}
+async function apiCreateComment(postId, commentData) {
+    return fetchApi(`/posts/${postId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify(commentData),
+    });
+}
+async function apiUpdateComment(postId, commentId, commentData) {
+    return fetchApi(`/posts/${postId}/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(commentData),
+    });
+}
+async function apiDeleteComment(postId, commentId) {
+    return fetchApi(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+}
+
+async function apiGetPostLikes(postId) {
+    return fetchApi(`/posts/${postId}/likes`, { method: 'GET' });
+}
+
+async function apiLikePost(postId) {
+    return fetchApi(`/posts/${postId}/likes`, {
+        method: 'POST',
+    });
+}
+
+async function apiUnlikePost(postId) {
+    return fetchApi(`/posts/${postId}/likes`, {
+        method: 'DELETE',
+    });
 }

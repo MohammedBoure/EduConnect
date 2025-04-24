@@ -1,148 +1,571 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة المنشورات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --text-color: #333;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        nav {
+            background-color: var(--primary-color);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: flex-start;
+            list-style: none;
+            padding: 0 1rem;
+            margin: 0;
+        }
+
+        nav ul li a {
+            display: flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        nav ul li a:hover {
+            background-color: var(--secondary-color);
+        }
+
+        nav ul li a.active {
+            background-color: var(--secondary-color);
+        }
+
+        nav ul li a i {
+            margin-left: 0.5rem;
+        }
+
+        #logoutBtn {
+            color: #ff6b6b;
+        }
+
+        #logoutBtn:hover {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-section h1 {
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .header-section h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--secondary-color);
+        }
+
+        .tools {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message i {
+            margin-left: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .loading i {
+            animation: spin 1s infinite linear;
+            margin-left: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: var(--light-color);
+            border-bottom: 2px solid #ddd;
+        }
+
+        th {
+            padding: 1rem;
+            font-weight: 600;
+            text-align: right;
+            color: var(--dark-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        td.actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.85rem;
+            border-radius: 3px;
+        }
+
+        .btn-edit {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover:not([disabled]) {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .pagination button.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .no-data p {
+            color: #777;
+            font-size: 1.1rem;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .header-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .tools {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            th,
+            td {
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+        }
+    </style>
 </head>
+
 <body>
     <nav>
-         <ul>
-            <li><a href="index.html">الرئيسية</a></li>
-            <li><a href="admin_users.html">إدارة المستخدمين</a></li>
-            <li><a href="admin_posts.html">إدارة المنشورات</a></li>
-            <li><a href="#" id="logoutBtn">تسجيل الخروج</a></li>
+        <ul>
+            <li><a href="index.html"><i class="fas fa-home"></i> الرئيسية</a></li>
+            <li><a href="admin_users.html"><i class="fas fa-users"></i> إدارة المستخدمين</a></li>
+            <li><a href="admin_posts.html" class="active"><i class="fas fa-file-alt"></i> إدارة المنشورات</a></li>
+            <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
         </ul>
     </nav>
 
     <div class="container">
-        <h1>إدارة المنشورات</h1>
-         <a href="admin_post_create.html"><button>إنشاء منشور جديد</button></a>
-        <div id="message" class="message" style="display: none;"></div>
-        <div id="loading" class="loading" style="display: none;">جاري تحميل المنشورات...</div>
-
-        <table id="postsTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>العنوان</th>
-                    <th>المؤلف</th>
-                    <th>تاريخ الإنشاء</th>
-                    <th>إجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="postsTbody">
-                <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
-            </tbody>
-        </table>
-        <p id="noPosts" style="display: none;">لا توجد منشورات لعرضها.</p>
-
-        <div id="pagination">
-             <!-- أزرار الترقيم هنا -->
+        <div class="header-section">
+            <h1>إدارة المنشورات</h1>
+            <div class="tools">
+                <a href="admin_post_create.html" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> إنشاء منشور جديد
+                </a>
+            </div>
         </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">
+            <i class="fas fa-spinner"></i> جاري تحميل المنشورات...
+        </div>
+
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <table id="postsTable">
+                <thead>
+                    <tr>
+                        <th width="80">المعرف</th>
+                        <th>العنوان</th>
+                        <th>المؤلف</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th width="120">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="postsTbody"></tbody>
+            </table>
+        </div>
+
+        <div id="noPosts" class="no-data" style="display: none;">
+            <i class="fas fa-file-alt"></i>
+            <p>لا توجد منشورات لعرضها حاليًا.</p>
+        </div>
+
+        <div id="pagination" class="pagination"></div>
     </div>
 
     <script src="js/auth.js"></script>
     <script src="js/api.js"></script>
     <script>
-        // حماية الصفحة
         redirectToLoginIfNotAuthenticated();
 
         const postsTbody = document.getElementById('postsTbody');
-        const postsTable = document.getElementById('postsTable');
+        const tableContainer = document.getElementById('tableContainer');
         const loadingDiv = document.getElementById('loading');
         const noPostsP = document.getElementById('noPosts');
         const paginationDiv = document.getElementById('pagination');
-        const logoutBtn = document.getElementById('logoutBtn'); // زر الخروج
+        const messageDiv = document.getElementById('message');
+        const logoutBtn = document.getElementById('logoutBtn');
 
         let currentPage = 1;
         const perPage = 10;
 
         async function loadPosts(page = 1) {
-            loadingDiv.style.display = 'block';
-            postsTable.style.display = 'none';
-            noPostsP.style.display = 'none';
-            postsTbody.innerHTML = '';
-            paginationDiv.innerHTML = '';
-            hideMessage('message');
+            showLoading(true);
+            currentPage = page;
 
             const result = await apiGetPosts(page, perPage);
-
-            loadingDiv.style.display = 'none';
+            showLoading(false);
 
             if (result.ok && result.data.posts) {
                 const posts = result.data.posts;
-                 if (posts.length > 0) {
-                    postsTable.style.display = 'table';
-                    posts.forEach(post => {
-                        const row = postsTbody.insertRow();
-                        const authorName = post.author ? `${post.author.first_name || ''} ${post.author.last_name || ''}` : 'غير معروف';
-                        const creationDate = post.created_at ? new Date(post.created_at).toLocaleString('ar-EG') : '-';
-
-                        row.innerHTML = `
-                            <td>${post.id}</td>
-                            <td>${post.title || ''}</td>
-                            <td>${authorName}</td>
-                            <td>${creationDate}</td>
-                            <td class="actions">
-                                <button onclick="editPost(${post.id})">تعديل</button>
-                                <button class="danger" onclick="deletePost(${post.id}, '${post.title}')">حذف</button>
-                            </td>
-                        `;
-                     });
-                    currentPage = result.data.page;
-                    renderPagination(result.data.page, result.data.pages);
-                 } else {
-                    noPostsP.style.display = 'block';
-                 }
+                renderPosts(posts);
+                renderPagination(result.data.page, result.data.pages);
             } else {
-                showMessage('message', `فشل تحميل المنشورات: ${result.error}`, 'error');
+                showMessage(`فشل تحميل المنشورات: ${result.error}`, 'error');
+                tableContainer.style.display = 'none';
+                noPostsP.style.display = 'block';
             }
         }
 
-         function renderPagination(currentPage, totalPages) {
-            paginationDiv.innerHTML = ''; // مسح الأزرار القديمة
+        function renderPosts(posts) {
+            postsTbody.innerHTML = '';
 
-            // زر السابق
+            if (posts.length > 0) {
+                tableContainer.style.display = 'block';
+                noPostsP.style.display = 'none';
+
+                posts.forEach(post => {
+                    const row = postsTbody.insertRow();
+                    row.classList.add('fade-in');
+
+                    const authorName = post.author ? `${post.author.first_name || ''} ${post.author.last_name || ''}` : 'غير معروف';
+                    const creationDate = post.created_at ? new Date(post.created_at).toLocaleString('ar-EG') : '-';
+
+                    row.innerHTML = `
+                        <td>${post.id}</td>
+                        <td>${post.title || '-'}</td>
+                        <td>${authorName}</td>
+                        <td>${creationDate}</td>
+                        <td class="actions">
+                            <button class="btn btn-sm btn-edit" onclick="editPost(${post.id})" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-delete" onclick="deletePost(${post.id}, '${post.title}')" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                });
+            } else {
+                tableContainer.style.display = 'none';
+                noPostsP.style.display = 'block';
+            }
+        }
+
+        function renderPagination(currentPage, totalPages) {
+            paginationDiv.innerHTML = '';
+
+            if (totalPages <= 1) {
+                paginationDiv.style.display = 'none';
+                return;
+            }
+
+            paginationDiv.style.display = 'flex';
+
             const prevButton = document.createElement('button');
-            prevButton.textContent = 'السابق';
+            prevButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
             prevButton.disabled = currentPage === 1;
+            prevButton.title = 'الصفحة السابقة';
             prevButton.onclick = () => loadPosts(currentPage - 1);
             paginationDiv.appendChild(prevButton);
 
-            // عرض رقم الصفحة الحالية وعدد الصفحات الإجمالي
-            const pageInfo = document.createElement('span');
-            pageInfo.textContent = ` صفحة ${currentPage} من ${totalPages} `;
-            pageInfo.style.margin = '0 10px';
-            paginationDiv.appendChild(pageInfo);
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
 
-            // زر التالي
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.onclick = () => loadPosts(i);
+                paginationDiv.appendChild(pageButton);
+            }
+
             const nextButton = document.createElement('button');
-            nextButton.textContent = 'التالي';
+            nextButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
             nextButton.disabled = currentPage >= totalPages;
+            nextButton.title = 'الصفحة التالية';
             nextButton.onclick = () => loadPosts(currentPage + 1);
             paginationDiv.appendChild(nextButton);
+
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `${currentPage} من ${totalPages}`;
+            pageInfo.style.marginRight = '10px';
+            paginationDiv.appendChild(pageInfo);
         }
 
+        function showLoading(show) {
+            loadingDiv.style.display = show ? 'flex' : 'none';
+            if (show) {
+                tableContainer.style.display = 'none';
+                noPostsP.style.display = 'none';
+                messageDiv.style.display = 'none';
+            }
+        }
 
-         function editPost(postId) {
+        function showMessage(text, type = 'success') {
+            messageDiv.className = 'message ' + type;
+            const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
+            messageDiv.innerHTML = icon + text;
+            messageDiv.style.display = 'flex';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function editPost(postId) {
             window.location.href = `admin_post_edit.html?id=${postId}`;
-         }
+        }
 
-         async function deletePost(postId, postTitle) {
-             if (confirm(`هل أنت متأكد من حذف المنشور "${postTitle}" (ID: ${postId})؟`)) {
-                 const result = await apiDeletePost(postId);
-                 if (result.ok) {
-                    showMessage('message', `تم حذف المنشور بنجاح.`, 'success');
-                    loadPosts(currentPage); // إعادة تحميل القائمة
-                 } else {
-                     showMessage('message', `فشل حذف المنشور: ${result.error}`, 'error');
-                 }
-             }
-         }
+        async function deletePost(postId, postTitle) {
+            if (confirm(`هل أنت متأكد من حذف المنشور "${postTitle}"؟`)) {
+                showLoading(true);
+                const result = await apiDeletePost(postId);
+                showLoading(false);
+                if (result.ok) {
+                    showMessage(`تم حذف المنشور "${postTitle}" بنجاح`, 'success');
+                    loadPosts(currentPage);
+                } else {
+                    showMessage(`فشل حذف المنشور: ${result.error}`, 'error');
+                }
+            }
+        }
 
-         // إضافة مستمع لزر الخروج
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
@@ -150,8 +573,16 @@
             }
         });
 
-        // تحميل المنشورات عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', () => loadPosts(currentPage));
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPosts(currentPage);
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.href.includes(window.location.pathname)) {
+                    link.classList.add('active');
+                }
+            });
+        });
     </script>
 </body>
+
 </html>
