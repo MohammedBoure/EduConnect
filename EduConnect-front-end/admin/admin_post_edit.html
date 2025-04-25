@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل المنشور</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+         <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="admin_users.html">إدارة المستخدمين</a></li>
+            <li><a href="admin_posts.html">إدارة المنشورات</a></li>
+            <li><a href="#" id="logoutBtn">تسجيل الخروج</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <h1>تعديل المنشور</h1>
+        <div id="message" class="message" style="display: none;"></div>
+        <div id="loading" class="loading">جاري تحميل بيانات المنشور...</div>
+
+        <form id="editPostForm" style="display: none;">
+             <input type="hidden" id="post_id" name="id">
+
+            <label for="title">العنوان:</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="content">المحتوى:</label>
+            <textarea id="content" name="content" rows="6" required></textarea>
+
+            <label for="image">رابط الصورة:</label>
+            <input type="url" id="image" name="image">
+
+            <button type="submit" id="submitBtn">حفظ التغييرات</button>
+            <a href="admin_posts.html"><button type="button">إلغاء</button></a>
+        </form>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // حماية الصفحة
+        redirectToLoginIfNotAuthenticated();
+
+        const form = document.getElementById('editPostForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingDiv = document.getElementById('loading');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id');
+
+        async function loadPostDetails() {
+            if (!postId) {
+                 showMessage('message', 'لم يتم تحديد معرف المنشور.', 'error');
+                 loadingDiv.style.display = 'none';
+                 return;
+            }
+
+            // نفترض وجود apiGetPostDetails في api.js
+            const result = await apiGetPostDetails(postId); // استخدام الدالة المفترضة
+            loadingDiv.style.display = 'none';
+
+            if (result.ok && result.data) {
+                 // ملاحظة: الـ API الموجودة لا ترجع تفاصيل المنشور الواحد
+                 // سنملأ النموذج بناءً على ما هو متوقع من API التحديث
+                 const post = result.data.post || result.data; // التعامل مع تفاوت الاستجابات
+                 document.getElementById('post_id').value = post.id;
+                 document.getElementById('title').value = post.title || '';
+                 document.getElementById('content').value = post.content || '';
+                 document.getElementById('image').value = post.image || '';
+                 form.style.display = 'block';
+            } else {
+                 showMessage('message', `فشل تحميل بيانات المنشور: ${result.error || 'API للحصول على تفاصيل المنشور غير متاحة أو فشلت.'}`, 'error');
+            }
+        }
+
+        form.addEventListener('submit', async (event) => {
+             event.preventDefault();
+             hideMessage('message');
+             submitBtn.disabled = true;
+             submitBtn.textContent = 'جاري الحفظ...';
+
+             const formData = new FormData(form);
+             const updatedData = {
+                title: formData.get('title'),
+                content: formData.get('content'),
+                image: formData.get('image')
+             };
+
+             const currentPostId = formData.get('id');
+             const result = await apiUpdatePost(currentPostId, updatedData);
+
+              if (result.ok) {
+                 showMessage('message', 'تم تحديث المنشور بنجاح!', 'success');
+             } else {
+                 showMessage('message', `فشل تحديث المنشور: ${result.error}`, 'error');
+             }
+
+             submitBtn.disabled = false;
+             submitBtn.textContent = 'حفظ التغييرات';
+        });
+
+         // إضافة مستمع لزر الخروج
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                logout();
+            }
+        });
+
+        // تحميل بيانات المنشور عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', loadPostDetails);
+
+    </script>
+</body>
+</html>
