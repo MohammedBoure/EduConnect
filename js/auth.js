@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api'; // http://127.0.0.1:5000     https://educonnect-wp9t.onrender.com
+const API_BASE_URL = 'https://educonnect-wp9t.onrender.com/api'; // http://127.0.0.1:5000     https://educonnect-wp9t.onrender.com
 
 function setToken(token) {
     localStorage.setItem('access_token', token);
