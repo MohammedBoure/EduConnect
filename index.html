@@ -1,61 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
-    <style>
-        /* Reset default styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Basic page styling */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header styling */
-        header {
-            background-color: #333;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        /* Main content */
-        main {
-            flex: 1;
-            padding: 2rem;
-        }
-
-        /* Footer styling */
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-        }
-    </style>
+    <title>university</title>
+    <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
     <header>
-        <h1>Welcome to the Home Page</h1>
+        <nav id="navBar">
+            <ul class="sideBar">
+                <li onclick=hideSidebar()><a href="#"><svg id="hidesvg" xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="#e3e3e3"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg></a></li>
+                <li><a href="aboutUS.html">ABOUT US</a></li>
+                <li><a href="blog.html">BLOG</a></li>
+                <li><a href="register.html">REGISTER</a></li>
+                <li><a href="signIn.html">SIGN IN</a> </li>
+            </ul>
+            <ul>
+                <li ><a href="index.html">HOME</a></li>
+                <li class="hideOnMobile"><a href="aboutUS.html">ABOUT US</a></li>
+                <li class="hideOnMobile"><a href="blog.html">BLOG</a></li>
+                <li class="hideOnMobile"><a href="register.html">REGISTER</a></li>
+                <li class="hideOnMobile"><a href="signIn.html">SIGN IN</a> </li>
+                <li onclick=showSidebar()><a href="#"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                            viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                            <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z" />
+                        </svg></a></li>
+            </ul>
+        </nav>
     </header>
+    <script defer>
+        function showSidebar() {
+            const sideBar = document.querySelector('.sideBar')
+            sideBar.style.display = 'flex'
+        }
+        function hideSidebar(){
+            const sideBar = document.querySelector('.sideBar')
+            sideBar.style.display = 'none'
+        }
 
-    <main>
-        <!-- Your content goes here -->
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Your Website</p>
-    </footer>
+    </script>
 </body>
+
 </html>
