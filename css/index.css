@@ -5,14 +5,17 @@
 
 body {
     min-height: 100vh;
-    background-image: url(images/MainImage.jpg);
+    background-image: url('../images/MainImage.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* nav bar*/
+
 #navBar {
+    backdrop-filter: blur(2px);
     background-color: white;
     box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.1);
 }
@@ -27,7 +30,6 @@ nav ul {
 
 nav li {
     height: 50px;
-
 }
 
 nav a {
@@ -54,9 +56,10 @@ nav li:first-child {
     right: 0;
     height: 100vh;
     width: 250px;
-    z-index: 999; /* to make it above everything */
+    z-index: 999;
+    /* to make it above everything */
     background-color: rgba(255, 255, 255, 0.432);
-    backdrop-filter:blur(10px);
+    backdrop-filter: blur(10px);
     box-shadow: -10px 0px 10px rgba(0, 0, 0, 0.001);
     display: none;
     flex-direction: column;
@@ -64,18 +67,23 @@ nav li:first-child {
     justify-content: flex-start;
 }
 
-.sideBar li{
-    width:100% ;
+.sideBar li {
+    width: 100%;
 
 }
-.sideBar a{
+
+.sideBar a {
     width: 100%;
 }
-@media(max-width: 800px){
-    .hideOnMobile{
+
+@media(max-width: 800px) {
+    .hideOnMobile {
         display: none;
     }
 }
-svg{
+
+svg {
     fill: black;
 }
+
+/* end of nav bar   */
